@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -109,12 +110,41 @@ func loadConfig(filename string) (*Config, error) {
 	return &config, nil
 }
 
-func start() error {
-	if len(os.Args) < 2 {
-		return fmt.Errorf("usage: jira-ticket-number <TICKET-KEY>")
+func extractTicketKey(input string) (string, error) {
+	// Try to parse as URL
+	parsedURL, err := url.Parse(input)
+	if err == nil && parsedURL.Scheme != "" && parsedURL.Host != "" {
+		// It's a URL, extract ticket key from path
+		// Expected format: /browse/TICKET-KEY
+		parts := strings.Split(parsedURL.Path, "/")
+		for i, part := range parts {
+			if part == "browse" && i+1 < len(parts) {
+				ticketKey := parts[i+1]
+				if ticketKey == "" {
+					return "", fmt.Errorf("could not extract ticket key from URL: %s", input)
+				}
+				return ticketKey, nil
+			}
+		}
+		return "", fmt.Errorf("could not extract ticket key from URL: %s", input)
 	}
 
-	ticketKey := strings.ToUpper(os.Args[1])
+	// Not a URL, treat as ticket key
+	return input, nil
+}
+
+func start() error {
+	if len(os.Args) < 2 {
+		return fmt.Errorf("usage: jira-ticket-number <TICKET-KEY or URL>")
+	}
+
+	input := os.Args[1]
+	ticketKey, err := extractTicketKey(input)
+	if err != nil {
+		return err
+	}
+
+	ticketKey = strings.ToUpper(ticketKey)
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {

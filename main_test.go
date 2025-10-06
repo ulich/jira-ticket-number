@@ -31,17 +31,17 @@ func newMockResponse(statusCode int, body string) *http.Response {
 
 func TestGetIssue_WithParent(t *testing.T) {
 	mockResp := `{
-		"key": "PNC-2732",
+		"key": "ABC-2732",
 		"fields": {
 			"parent": {
-				"key": "PNC-2181"
+				"key": "ABC-2181"
 			}
 		}
 	}`
 
 	transport := &mockRoundTripper{
 		responses: map[string]*http.Response{
-			"https://jira.example.com/rest/api/2/issue/PNC-2732?fields=parent": newMockResponse(http.StatusOK, mockResp),
+			"https://jira.example.com/rest/api/2/issue/ABC-2732?fields=parent": newMockResponse(http.StatusOK, mockResp),
 		},
 	}
 
@@ -49,33 +49,33 @@ func TestGetIssue_WithParent(t *testing.T) {
 		Transport: transport,
 	})
 
-	issue, err := client.GetIssue("PNC-2732")
+	issue, err := client.GetIssue("ABC-2732")
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
 
-	if issue.Key != "PNC-2732" {
-		t.Errorf("expected issue key PNC-2732, got: %s", issue.Key)
+	if issue.Key != "ABC-2732" {
+		t.Errorf("expected issue key ABC-2732, got: %s", issue.Key)
 	}
 
 	if issue.Fields.Parent == nil {
 		t.Fatal("expected parent to be present")
 	}
 
-	if issue.Fields.Parent.Key != "PNC-2181" {
-		t.Errorf("expected parent key PNC-2181, got: %s", issue.Fields.Parent.Key)
+	if issue.Fields.Parent.Key != "ABC-2181" {
+		t.Errorf("expected parent key ABC-2181, got: %s", issue.Fields.Parent.Key)
 	}
 }
 
 func TestGetIssue_WithoutParent(t *testing.T) {
 	mockResp := `{
-		"key": "PNC-2181",
+		"key": "ABC-2181",
 		"fields": {}
 	}`
 
 	transport := &mockRoundTripper{
 		responses: map[string]*http.Response{
-			"https://jira.example.com/rest/api/2/issue/PNC-2181?fields=parent": newMockResponse(http.StatusOK, mockResp),
+			"https://jira.example.com/rest/api/2/issue/ABC-2181?fields=parent": newMockResponse(http.StatusOK, mockResp),
 		},
 	}
 
@@ -83,13 +83,13 @@ func TestGetIssue_WithoutParent(t *testing.T) {
 		Transport: transport,
 	})
 
-	issue, err := client.GetIssue("PNC-2181")
+	issue, err := client.GetIssue("ABC-2181")
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
 
-	if issue.Key != "PNC-2181" {
-		t.Errorf("expected issue key PNC-2181, got: %s", issue.Key)
+	if issue.Key != "ABC-2181" {
+		t.Errorf("expected issue key ABC-2181, got: %s", issue.Key)
 	}
 
 	if issue.Fields.Parent != nil {
@@ -99,17 +99,17 @@ func TestGetIssue_WithoutParent(t *testing.T) {
 
 func TestGetTicketOrParent_Subtask(t *testing.T) {
 	mockResp := `{
-		"key": "PNC-2732",
+		"key": "ABC-2732",
 		"fields": {
 			"parent": {
-				"key": "PNC-2181"
+				"key": "ABC-2181"
 			}
 		}
 	}`
 
 	transport := &mockRoundTripper{
 		responses: map[string]*http.Response{
-			"https://jira.example.com/rest/api/2/issue/PNC-2732?fields=parent": newMockResponse(http.StatusOK, mockResp),
+			"https://jira.example.com/rest/api/2/issue/ABC-2732?fields=parent": newMockResponse(http.StatusOK, mockResp),
 		},
 	}
 
@@ -117,12 +117,12 @@ func TestGetTicketOrParent_Subtask(t *testing.T) {
 		Transport: transport,
 	})
 
-	result, err := client.GetTicketOrParent("PNC-2732")
+	result, err := client.GetTicketOrParent("ABC-2732")
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
 
-	expected := "PNC-2181/PNC-2732"
+	expected := "ABC-2181/ABC-2732"
 	if result != expected {
 		t.Errorf("expected %s, got: %s", expected, result)
 	}
@@ -130,13 +130,13 @@ func TestGetTicketOrParent_Subtask(t *testing.T) {
 
 func TestGetTicketOrParent_ParentTask(t *testing.T) {
 	mockResp := `{
-		"key": "PNC-2181",
+		"key": "ABC-2181",
 		"fields": {}
 	}`
 
 	transport := &mockRoundTripper{
 		responses: map[string]*http.Response{
-			"https://jira.example.com/rest/api/2/issue/PNC-2181?fields=parent": newMockResponse(http.StatusOK, mockResp),
+			"https://jira.example.com/rest/api/2/issue/ABC-2181?fields=parent": newMockResponse(http.StatusOK, mockResp),
 		},
 	}
 
@@ -144,12 +144,12 @@ func TestGetTicketOrParent_ParentTask(t *testing.T) {
 		Transport: transport,
 	})
 
-	result, err := client.GetTicketOrParent("PNC-2181")
+	result, err := client.GetTicketOrParent("ABC-2181")
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
 
-	expected := "PNC-2181"
+	expected := "ABC-2181"
 	if result != expected {
 		t.Errorf("expected %s, got: %s", expected, result)
 	}
@@ -214,4 +214,88 @@ func writeTestFile(path, content string) error {
 
 func openFile(path string) (*os.File, error) {
 	return os.Create(path)
+}
+
+func TestExtractTicketKey_FromTicketKey(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{"uppercase ticket", "ABC-2247", "ABC-2247"},
+		{"lowercase ticket", "ABC-2247", "ABC-2247"},
+		{"mixed case ticket", "ABC-2247", "ABC-2247"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := extractTicketKey(tt.input)
+			if err != nil {
+				t.Fatalf("expected no error, got: %v", err)
+			}
+			if result != tt.expected {
+				t.Errorf("expected %s, got: %s", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestExtractTicketKey_FromURL(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			"standard Jira URL",
+			"https://jira.example.com/browse/ABC-2247",
+			"ABC-2247",
+		},
+		{
+			"URL with query params",
+			"https://jira.example.com/browse/ABC-2247?filter=all",
+			"ABC-2247",
+		},
+		{
+			"URL with fragment",
+			"https://jira.example.com/browse/ABC-2247#comment-12345",
+			"ABC-2247",
+		},
+		{
+			"different domain",
+			"https://jira.example.com/browse/ABC-123",
+			"ABC-123",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := extractTicketKey(tt.input)
+			if err != nil {
+				t.Fatalf("expected no error, got: %v", err)
+			}
+			if result != tt.expected {
+				t.Errorf("expected %s, got: %s", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestExtractTicketKey_InvalidURL(t *testing.T) {
+	tests := []struct {
+		name  string
+		input string
+	}{
+		{"URL without browse path", "https://jira.example.com/issues/ABC-2247"},
+		{"URL with incomplete path", "https://jira.example.com/browse/"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := extractTicketKey(tt.input)
+			if err == nil {
+				t.Fatal("expected error for invalid URL format, got nil")
+			}
+		})
+	}
 }

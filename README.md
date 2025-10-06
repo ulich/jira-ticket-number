@@ -4,11 +4,23 @@ A small command line application that reads a Jira subtask via the API and retur
 
 ## Usage
 
+You can provide either a ticket key or a full Jira URL:
+
+### Using a ticket key
+
     jira-ticket-number ABC-2354
 
 Will output
 
-    ABC-1234/2354
+    ABC-1234/ABC-2354
+
+### Using a Jira URL
+
+    jira-ticket-number https://jira.example.com/browse/ABC-2354
+
+Will output
+
+    ABC-1234/ABC-2354
 
 ## Development
 
