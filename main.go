@@ -12,7 +12,6 @@ import (
 
 type JiraClient struct {
 	BaseURL string
-	Email   string
 	Token   string
 	Client  *http.Client
 }
@@ -30,13 +29,12 @@ type JiraIssue struct {
 	Fields JiraIssueFields `json:"fields"`
 }
 
-func NewJiraClient(baseURL, email, token string, client *http.Client) *JiraClient {
+func NewJiraClient(baseURL, token string, client *http.Client) *JiraClient {
 	if client == nil {
 		client = &http.Client{}
 	}
 	return &JiraClient{
 		BaseURL: baseURL,
-		Email:   email,
 		Token:   token,
 		Client:  client,
 	}
@@ -86,10 +84,9 @@ func (c *JiraClient) GetTicketOrParent(issueKey string) (string, error) {
 }
 
 type Config struct {
-	JIRA_URL       string
-	USERNAME       string
-	PERSONAL_TOKEN string
-	ProjectKey     string `json:"projectKey,omitempty"`
+	JiraURL       string `json:"jiraUrl"`
+	PersonalToken string `json:"personalToken"`
+	ProjectKey    string `json:"projectKey,omitempty"`
 }
 
 func loadConfig(filename string) (*Config, error) {
@@ -104,7 +101,7 @@ func loadConfig(filename string) (*Config, error) {
 		return nil, err
 	}
 
-	if config.JIRA_URL == "" || config.USERNAME == "" || config.PERSONAL_TOKEN == "" {
+	if config.JiraURL == "" || config.PersonalToken == "" {
 		return nil, fmt.Errorf("missing required fields in config file")
 	}
 
@@ -175,7 +172,7 @@ func start() error {
 
 	ticketKey = strings.ToUpper(ticketKey)
 
-	client := NewJiraClient(config.JIRA_URL, config.USERNAME, config.PERSONAL_TOKEN, nil)
+	client := NewJiraClient(config.JiraURL, config.PersonalToken, nil)
 
 	result, err := client.GetTicketOrParent(ticketKey)
 	if err != nil {

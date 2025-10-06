@@ -8,9 +8,8 @@ Create a configuration file at `~/.jira-ticket-number.json`:
 
 ```json
 {
-  "JIRA_URL": "https://jira.example.com",
-  "USERNAME": "your-email@example.com",
-  "PERSONAL_TOKEN": "your-api-token",
+  "jiraUrl": "https://jira.example.com",
+  "personalToken": "your-api-token",
   "projectKey": "ABC"
 }
 ```

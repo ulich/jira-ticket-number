@@ -45,7 +45,7 @@ func TestGetIssue_WithParent(t *testing.T) {
 		},
 	}
 
-	client := NewJiraClient("https://jira.example.com", "test@example.com", "token", &http.Client{
+	client := NewJiraClient("https://jira.example.com", "token", &http.Client{
 		Transport: transport,
 	})
 
@@ -79,7 +79,7 @@ func TestGetIssue_WithoutParent(t *testing.T) {
 		},
 	}
 
-	client := NewJiraClient("https://jira.example.com", "test@example.com", "token", &http.Client{
+	client := NewJiraClient("https://jira.example.com", "token", &http.Client{
 		Transport: transport,
 	})
 
@@ -113,7 +113,7 @@ func TestGetTicketOrParent_Subtask(t *testing.T) {
 		},
 	}
 
-	client := NewJiraClient("https://jira.example.com", "test@example.com", "token", &http.Client{
+	client := NewJiraClient("https://jira.example.com", "token", &http.Client{
 		Transport: transport,
 	})
 
@@ -140,7 +140,7 @@ func TestGetTicketOrParent_ParentTask(t *testing.T) {
 		},
 	}
 
-	client := NewJiraClient("https://jira.example.com", "test@example.com", "token", &http.Client{
+	client := NewJiraClient("https://jira.example.com", "token", &http.Client{
 		Transport: transport,
 	})
 
@@ -162,7 +162,7 @@ func TestGetIssue_APIError(t *testing.T) {
 		},
 	}
 
-	client := NewJiraClient("https://jira.example.com", "test@example.com", "token", &http.Client{
+	client := NewJiraClient("https://jira.example.com", "token", &http.Client{
 		Transport: transport,
 	})
 
@@ -175,9 +175,8 @@ func TestGetIssue_APIError(t *testing.T) {
 func TestLoadConfig(t *testing.T) {
 	// Create a temporary config file
 	content := `{
-	"JIRA_URL": "https://jira.example.com",
-	"USERNAME": "test@example.com",
-	"PERSONAL_TOKEN": "token123"
+	"jiraUrl": "https://jira.example.com",
+	"personalToken": "token123"
 }`
 	tmpfile := "/tmp/test_config.json"
 	if err := writeTestFile(tmpfile, content); err != nil {
@@ -189,16 +188,12 @@ func TestLoadConfig(t *testing.T) {
 		t.Fatalf("expected no error, got: %v", err)
 	}
 
-	if config.JIRA_URL != "https://jira.example.com" {
-		t.Errorf("expected JIRA_URL to be https://jira.example.com, got: %s", config.JIRA_URL)
+	if config.JiraURL != "https://jira.example.com" {
+		t.Errorf("expected JiraURL to be https://jira.example.com, got: %s", config.JiraURL)
 	}
 
-	if config.USERNAME != "test@example.com" {
-		t.Errorf("expected USERNAME to be test@example.com, got: %s", config.USERNAME)
-	}
-
-	if config.PERSONAL_TOKEN != "token123" {
-		t.Errorf("expected PERSONAL_TOKEN to be token123, got: %s", config.PERSONAL_TOKEN)
+	if config.PersonalToken != "token123" {
+		t.Errorf("expected PersonalToken to be token123, got: %s", config.PersonalToken)
 	}
 }
 
