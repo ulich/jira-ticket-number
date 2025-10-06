@@ -229,7 +229,7 @@ func TestExtractTicketKey_FromTicketKey(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := extractTicketKey(tt.input)
+			result, err := extractTicketKey(tt.input, "")
 			if err != nil {
 				t.Fatalf("expected no error, got: %v", err)
 			}
@@ -270,7 +270,7 @@ func TestExtractTicketKey_FromURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := extractTicketKey(tt.input)
+			result, err := extractTicketKey(tt.input, "")
 			if err != nil {
 				t.Fatalf("expected no error, got: %v", err)
 			}
@@ -292,9 +292,59 @@ func TestExtractTicketKey_InvalidURL(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := extractTicketKey(tt.input)
+			_, err := extractTicketKey(tt.input, "")
 			if err == nil {
 				t.Fatal("expected error for invalid URL format, got nil")
+			}
+		})
+	}
+}
+
+func TestExtractTicketKey_NumericOnly(t *testing.T) {
+	tests := []struct {
+		name       string
+		input      string
+		projectKey string
+		expected   string
+		wantErr    bool
+	}{
+		{
+			"with project key",
+			"2803",
+			"ABC",
+			"ABC-2803",
+			false,
+		},
+		{
+			"with different project",
+			"DEF-2803",
+			"ABC",
+			"DEF-2803",
+			false,
+		},
+		{
+			"numeric without project key",
+			"2803",
+			"",
+			"",
+			true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := extractTicketKey(tt.input, tt.projectKey)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("expected no error, got: %v", err)
+			}
+			if result != tt.expected {
+				t.Errorf("expected %s, got: %s", tt.expected, result)
 			}
 		})
 	}

@@ -89,6 +89,7 @@ type Config struct {
 	JIRA_URL       string
 	USERNAME       string
 	PERSONAL_TOKEN string
+	ProjectKey     string `json:"projectKey,omitempty"`
 }
 
 func loadConfig(filename string) (*Config, error) {
@@ -110,7 +111,7 @@ func loadConfig(filename string) (*Config, error) {
 	return &config, nil
 }
 
-func extractTicketKey(input string) (string, error) {
+func extractTicketKey(input string, projectKey string) (string, error) {
 	// Try to parse as URL
 	parsedURL, err := url.Parse(input)
 	if err == nil && parsedURL.Scheme != "" && parsedURL.Host != "" {
@@ -129,22 +130,31 @@ func extractTicketKey(input string) (string, error) {
 		return "", fmt.Errorf("could not extract ticket key from URL: %s", input)
 	}
 
+	// Check if input is numeric only
+	if isNumeric(input) {
+		if projectKey == "" {
+			return "", fmt.Errorf("numeric ticket number provided (%s) but no projectKey configured in config file", input)
+		}
+		return projectKey + "-" + input, nil
+	}
+
 	// Not a URL, treat as ticket key
 	return input, nil
+}
+
+func isNumeric(s string) bool {
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return len(s) > 0
 }
 
 func start() error {
 	if len(os.Args) < 2 {
 		return fmt.Errorf("usage: jira-ticket-number <TICKET-KEY or URL>")
 	}
-
-	input := os.Args[1]
-	ticketKey, err := extractTicketKey(input)
-	if err != nil {
-		return err
-	}
-
-	ticketKey = strings.ToUpper(ticketKey)
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
@@ -156,7 +166,15 @@ func start() error {
 	if err != nil {
 		return fmt.Errorf("loading %s: %v\n", configPath, err)
 	}
-	
+
+	input := os.Args[1]
+	ticketKey, err := extractTicketKey(input, config.ProjectKey)
+	if err != nil {
+		return err
+	}
+
+	ticketKey = strings.ToUpper(ticketKey)
+
 	client := NewJiraClient(config.JIRA_URL, config.USERNAME, config.PERSONAL_TOKEN, nil)
 
 	result, err := client.GetTicketOrParent(ticketKey)
